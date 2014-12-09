@@ -455,13 +455,14 @@ def ticker(alt=False):
     
             # Insert the data to the temporary tables
             # Planets
+            mapping = {"Prty": "Cat", "Bad": "Zik", "Good": "Xan"}
             session.execute(planet_temp.insert(), [{
                                                     "x": int(p[0]),
                                                     "y": int(p[1]),
                                                     "z": int(p[2]),
                                                     "planetname": p[3].strip("\""),
                                                     "rulername": p[4].strip("\""),
-                                                    "race": p[5],
+                                                    "race": mapping[p[5]],
                                                     "size": int(p[6] or 0),
                                                     "score": int(p[7] or 0),
                                                     "value": int(p[8] or 0),
