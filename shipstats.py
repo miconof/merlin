@@ -31,12 +31,7 @@ from Core.maps import Ship
 useragent = "Merlin (Python-urllib/%s); Alliance/%s; BotNick/%s; Admin/%s" % (urllib2.__version__, Config.get("Alliance", "name"), 
                                                                               Config.get("Connection", "nick"), Config.items("Admins")[0][0])
 
-regex = r'^<tr class="('
-races = []
-for race in PA.options("races"):
-    races.append(PA.get(race, "name"))
-regex += "|".join(races)
-regex += ')">.+?>([^<]+)</td>' # race & name
+regex = r'^<tr class="(Good|Bad|Prty)">.+?>([^<]+)</td>' # race & name
 regex += r'<td>(\w+)</td>' # class
 regex += r'(?:<td>(\w\w|\-)</td>)?'*3 # t1,t2,t3
 regex += r'<td>(\w+)</td>' # type
@@ -52,11 +47,9 @@ mapping = { "Fi": "Fighter",
             "Bs": "Battleship",
             "Ro": "Roids",
             "St": "Struct",
-            "Ter": "Terran",
-            "Etd": "Eitraides",
-            "Cat": "Cathaar",
-            "Zik": "Zikonian",
-            "Xan": "Xandathrii"}
+            "Prty": "Cathaar",
+            "Bad": "Zikonian",
+            "Good": "Xandathrii"}
 
 keys = ['race', 'name', 'class_', 't1', 't2', 't3', 'type', 'init',
         'guns', 'armor', 'damage', 'empres', 'metal', 'crystal', 'eonium']
