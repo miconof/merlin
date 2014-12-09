@@ -506,6 +506,7 @@ def ticker(alt=False):
     
             # Insert the data to the temporary tables
             # Planets
+            mapping = {"Prty": "Cat", "Bad": "Zik", "Good": "Xan"}
             tmplist = [{
                         "id": p[0].strip("\""),
                         "x": int(p[1]),
@@ -513,7 +514,7 @@ def ticker(alt=False):
                         "z": int(p[3]),
                         "planetname": p[4].strip("\""),
                         "rulername": p[5].strip("\""),
-                        "race": p[6],
+                        "race": mapping[p[6]],
                         "size": int(p[7] or 0),
                         "score": int(p[8] or 0),
                         "value": int(p[9] or 0),
