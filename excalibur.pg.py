@@ -828,23 +828,15 @@ def ticker(alt=False):
             excaliburlog("Insert new planets in %.3f seconds" % (t2,))
             t1=time.time()
     
-            # Create records of new planets,
-            session.execute(text("""INSERT INTO planet_exiles (hour, tick, id, newx, newy, newz)
-                                    SELECT :hour, :tick, planet.id, planet_temp.x, planet_temp.y, planet_temp.z
+            # Create records of planet movements
+            session.execute(text("""INSERT INTO planet_exiles (hour, tick, id, oldx, oldy, oldz, newx, newy, newz)
+                                    SELECT :hour, :tick, planet.id, planet.x, planet.y, planet.z, planet_temp.x, planet_temp.y, planet_temp.z
                                     FROM planet_temp, planet
                                     WHERE
-                                        planet.id= planet_temp.id AND
-                                        planet.active = :true AND
-                                        planet.age IS NULL
-                                ;""", bindparams=[tick, hour, true]))
-            # deleted plantes
-            session.execute(text("""INSERT INTO planet_exiles (hour, tick, id, oldx, oldy, oldz)
-                                    SELECT :hour, :tick, planet.id, planet.x, planet.y, planet.z
-                                    FROM planet
-                                    WHERE
+                                        planet.id = planet_temp.id AND
                                         planet.active = :true AND
                                         planet.age IS NOT NULL AND
-                                        planet.id NOT IN (SELECT id FROM planet_temp WHERE id IS NOT NULL)
+                                        (planet.x != planet_temp.x OR planet.y != planet_temp.y OR planet.z != planet_temp.z)
                                 ;""", bindparams=[tick, hour, true]))
             # planet renames
             session.execute(text("""INSERT INTO planet_exiles (hour, tick, id, oldx, oldy, oldz, newx, newy, newz)
@@ -854,17 +846,28 @@ def ticker(alt=False):
                                         planet.id = planet_temp.id AND
                                         planet.active = :true AND
                                         planet.age IS NOT NULL AND
+                                        planet_temp.id NOT IN (SELECT id FROM planet_exiles) AND
                                         (planet.rulername != planet_temp.rulername OR planet.planetname != planet_temp.planetname)
                                 ;""", bindparams=[tick, hour, true]))
-            # and planet movements
-            session.execute(text("""INSERT INTO planet_exiles (hour, tick, id, oldx, oldy, oldz, newx, newy, newz)
-                                    SELECT :hour, :tick, planet.id, planet.x, planet.y, planet.z, planet_temp.x, planet_temp.y, planet_temp.z
+            # new planets,
+            session.execute(text("""INSERT INTO planet_exiles (hour, tick, id, newx, newy, newz)
+                                    SELECT :hour, :tick, planet.id, planet_temp.x, planet_temp.y, planet_temp.z
                                     FROM planet_temp, planet
                                     WHERE
-                                        planet.id = planet_temp.id AND
+                                        planet.id= planet_temp.id AND
+                                        planet_temp.id NOT IN (SELECT id FROM planet_exiles) AND
+                                        planet.active = :true AND
+                                        planet.age IS NULL
+                                ;""", bindparams=[tick, hour, true]))
+            # and deleted plantes
+            session.execute(text("""INSERT INTO planet_exiles (hour, tick, id, oldx, oldy, oldz)
+                                    SELECT :hour, :tick, planet.id, planet.x, planet.y, planet.z
+                                    FROM planet
+                                    WHERE
                                         planet.active = :true AND
                                         planet.age IS NOT NULL AND
-                                        (planet.x != planet_temp.x OR planet.y != planet_temp.y OR planet.z != planet_temp.z)
+                                        planet.id NOT IN (SELECT id FROM planet_temp WHERE id IS NOT NULL) AND
+                                        planet.id NOT IN (SELECT id FROM planet_exiles)
                                 ;""", bindparams=[tick, hour, true]))
     
             t2=time.time()-t1
