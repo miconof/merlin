@@ -1323,7 +1323,7 @@ if __name__ == "__main__":
         clean_cache()
         # Every 100 ticks check for missing 1-man alliances
         if planet_tick % 100 == 0:
-            find1man(1177)
+            find1man(PA.getint("numbers", "last_tick"))
         else:
             find1man(planet_tick-oldtick)
     
