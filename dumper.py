@@ -19,7 +19,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-import re, sys, time, urllib2, shutil, os, errno
+import sys, time, urllib2, shutil, os, errno
 
 # ########################################################################### #
 # ##############################     NOTICE     ############################# #
@@ -48,6 +48,41 @@ class DefaultErrorHandler(urllib2.HTTPDefaultErrorHandler):
         result.status = code
         return result 
 
+class botfile:
+    def __init__(self, page):
+        self.header = {}
+        self.body = []
+
+        # Parse header
+        line = page.readline().strip()
+        while line:
+            [field, value] = line.split(": ",1)
+            if value[0] == "'" and value[-1] == "'":
+                value = value[1:-1]
+            self.header[field] = value
+            line = page.readline().strip()
+
+        if self.header.has_key("Tick"):
+            if self.header["Tick"].isdigit():
+                self.tick = int(self.header["Tick"])
+            else:
+                raise TypeError("Non-numeric tick \"%s\" found." % self.header["Tick"])
+        else:
+            raise TypeError("No tick information found.")
+
+        if not self.header.has_key("Separator"):
+            self.header["Separator"] = "\t"
+
+        if not self.header.has_key("EOF"):
+            self.header["EOF"] = None
+
+        line = page.readline().strip()
+        while line != self.header["EOF"]:
+            self.body.append(line)
+            line = page.readline().strip()
+
+    def __iter__(self):
+        return iter(self.body)
 
 def get_dumps(last_tick, etag, modified, alt=False):
     global base_url, alt_base, useragent
@@ -61,7 +96,7 @@ def get_dumps(last_tick, etag, modified, alt=False):
        purl = base_url + "planet_listing.txt"
        gurl = base_url + "galaxy_listing.txt"
        aurl = base_url + "alliance_listing.txt"
-       furl = base_url + "/user_feed.txt"
+       furl = base_url + "user_feed.txt"
 
     # Build the request for planet data
     req = urllib2.Request(purl)
@@ -74,18 +109,18 @@ def get_dumps(last_tick, etag, modified, alt=False):
 
     opener = urllib2.build_opener(DefaultErrorHandler())
 
-    planets = opener.open(req)
+    pdump = opener.open(req)
     try:
-        if planets.status == 304:
+        if pdump.status == 304:
             print "Dump files not modified. Waiting..."
             time.sleep(60)
             return (False, False, False, False)
-        elif planets.status == 404 and last_tick < alt:
+        elif pdump.status == 404 and last_tick < alt:
             # Dumps are missing from archive. Check for dumps for next tick
             print "Dump files missing. Looking for newer..."
             return get_dumps(last_tick+1, etag, modified, alt)
         else:
-            print "Error: %s" % planets.status
+            print "Error: %s" % pdump.status
             time.sleep(120)
             return (False, False, False, False)
     except AttributeError:
@@ -95,63 +130,69 @@ def get_dumps(last_tick, etag, modified, alt=False):
     try:
         req = urllib2.Request(gurl)
         req.add_header('User-Agent', useragent)
-        galaxies = opener.open(req)
+        gdump = opener.open(req)
+        if gdump.info().status:
+            print "Error loading galaxy listing. Trying again in 2 minutes..."
+            time.sleep(120)
+            return (False, False, False, False)
         req = urllib2.Request(aurl)
         req.add_header('User-Agent', useragent)
-        alliances = opener.open(req)
+        adump = opener.open(req)
+        if adump.info().status:
+            print "Error loading alliance listing. Trying again in 2 minutes..."
+            time.sleep(120)
+            return (False, False, False, False)
         req = urllib2.Request(furl)
         req.add_header('User-Agent', useragent)
-        feed = opener.open(req)
+        udump = opener.open(req)
+        if udump.info().status:
+            if alt:
+                print "Error loading user feed. Ignoring."
+                udump = None
+            else:
+                print "Error loading user feed. Trying again in 2 minutes..."
+                time.sleep(120)
+                return (False, False, False, False)
     except Exception, e:
         print "Failed gathering dump files.\n%s" % (str(e),)
         time.sleep(300)
         return (False, False, False, False)
     else:
-        return (planets, galaxies, alliances, feed)
+        return (pdump, gdump, adump, udump)
 
 
-def checktick(planets, galaxies, alliances):
-    # Skip first three lines of the dump, tick info is on fourth line
-    planets.readline();planets.readline();planets.readline();
-    # Parse the fourth line and check we have a number
-    tick=planets.readline()
-    m=re.search(r"tick:\s+(\d+)",tick,re.I)
-    if not m:
-        print "Invalid tick: '%s'" % (tick,)
+def checktick(planets, galaxies, alliances, userfeed):
+    if not planets.tick:
+        print "Bad planet dump"
         time.sleep(120)
         return False
-    planet_tick=int(m.group(1))
-    print "Planet dump for tick %s" % (planet_tick,)
+    print "Planet dump for tick %s" % (planets.tick)
+    if not galaxies.tick:
+        print "Bad galaxy dump"
+        time.sleep(120)
+        return False
+    print "Galaxy dump for tick %s" % (galaxies.tick)
+    if not alliances.tick:
+        print "Bad alliance dump"
+        time.sleep(120)
+        return False
+    print "Alliance dump for tick %s" % (alliances.tick)
 
     # As above
-    galaxies.readline();galaxies.readline();galaxies.readline();
-    tick=galaxies.readline()
-    m=re.search(r"tick:\s+(\d+)",tick,re.I)
-    if not m:
-        print "Invalid tick: '%s'" % (tick,)
-        time.sleep(120)
-        return False
-    galaxy_tick=int(m.group(1))
-    print "Galaxy dump for tick %s" % (galaxy_tick,)
-
-    # As above
-    alliances.readline();alliances.readline();alliances.readline();
-    tick=alliances.readline()
-    m=re.search(r"tick:\s+(\d+)",tick,re.I)
-    if not m:
-        print "Invalid tick: '%s'" % (tick,)
-        time.sleep(120)
-        return False
-    alliance_tick=int(m.group(1))
-    print "Alliance dump for tick %s" % (alliance_tick,)
+    if userfeed:
+        if not userfeed.tick:
+            print "Bad userfeed dump"
+            time.sleep(120)
+            return False
+        print "UserFeed dump for tick %s" % (userfeed.tick)
 
     # Check the ticks of the dumps are all the same and that it's
     #  greater than the previous tick, i.e. a new tick
-    if not (planet_tick == galaxy_tick  == alliance_tick):
-        print "Varying ticks found, sleeping\nPlanet: %s, Galaxy: %s, Alliance: %s" % (planet_tick,galaxy_tick,alliance_tick)
+    if not ((planets.tick == galaxies.tick == alliances.tick) and ((not userfeed) or planets.tick == userfeed.tick)):
+        print "Varying ticks found, sleeping\nPlanet: %s, Galaxy: %s, Alliance: %s, UserFeed: %s" % (planets.tick, galaxies.tick, alliances.tick, userfeed.tick if userfeed else "N/A")
         time.sleep(30)
         return False
-    return planet_tick
+    return True
 
 
 def load_config():
@@ -188,13 +229,13 @@ def ticker(alt=False):
                 info.close()
                 sys.exit()
     
-            (planets, galaxies, alliances, feed) = get_dumps(last_tick, etag, modified, alt)
-            if not planets:
+            (pdump, gdump, adump, udump) = get_dumps(last_tick, etag, modified, alt)
+            if not pdump:
                 continue
 
             # Get header information now, as the headers will be lost if we save dumps
-            etag = planets.headers.get("ETag")
-            modified = planets.headers.get("Last-Modified")
+            etag = pdump.headers.get("ETag")
+            modified = pdump.headers.get("Last-Modified")
     
             try:
                 os.makedirs("dumps/%s" % (last_tick+1,))
@@ -205,27 +246,41 @@ def ticker(alt=False):
             pf = open("dumps/%s/planet_listing.txt" % (last_tick+1,), "w+")
             gf = open("dumps/%s/galaxy_listing.txt" % (last_tick+1,), "w+")
             af = open("dumps/%s/alliance_listing.txt" % (last_tick+1,), "w+")
-            ff = open("dumps/%s/user_feed.txt" % (last_tick+1,), "w+")
+            uf = open("dumps/%s/user_feed.txt" % (last_tick+1,), "w+")
             # Copy dump contents
-            shutil.copyfileobj(planets, pf)
-            shutil.copyfileobj(galaxies, gf)
-            shutil.copyfileobj(alliances, af)
-            shutil.copyfileobj(feed, ff)
+            shutil.copyfileobj(pdump, pf)
+            shutil.copyfileobj(gdump, gf)
+            shutil.copyfileobj(adump, af)
+            shutil.copyfileobj(udump, uf)
             # Return to the start of the file
             pf.seek(0)
             gf.seek(0)
             af.seek(0)
-            ff.close()
+            uf.seek(0)
             # Swap pointers
-            planets = pf
-            galaxies = gf
-            alliances = af
-    
-            planet_tick = checktick(planets, galaxies, alliances)
-            if not planet_tick:
+            pdump = pf
+            gdump = gf
+            adump = af
+            udump = uf
+
+            # Parse botfile headers
+            try:
+                planets   = botfile(pdump)
+                galaxies  = botfile(gdump)
+                alliances = botfile(adump)
+                userfeed = botfile(udump) if udump else None
+            except TypeError as e:
+                print "Error: %s" % e
+                time.sleep(60)
+                continue
+
+            if not checktick(planets, galaxies, alliances, userfeed):
                 continue
     
-            if not planet_tick > last_tick:
+            if not planets.tick > last_tick:
+                if planets.tick < last_tick - 5:
+                    print "Looks like a new round. Giving up."
+                    return False
                 print "Stale ticks found, sleeping"
                 time.sleep(60)
                 continue
@@ -234,24 +289,23 @@ def ticker(alt=False):
             print "Loaded dumps from webserver in %.3f seconds" % (t2,)
             t1=time.time()
     
-            if planet_tick > last_tick + 1:
+            if planets.tick > last_tick + 1:
                 if not alt:
                     print "Missing ticks. Switching to alternative url...."
-                    ticker(planet_tick-1)
+                    ticker(planets.tick-1)
                     (info, last_tick, etag, modified) = load_config()
                     continue
-                if planet_tick > alt:
+                if planets.tick > alt:
                     print "Something is very, very wrong..."
                     continue
-            info.write(str(planet_tick)+"\n"+str(etag)+"\n"+str(modified)+"\n")
-            if planet_tick < alt:
-                info.flush()
-                info.seek(0)
+            if planets.tick < alt:
                 print "Still some missing... (waiting 60 seconds)"
                 time.sleep(60)
                 ticker(alt)
             else:
-                info.write(str(planet_tick)+"\n"+str(etag)+"\n"+str(modified)+"\n")
+                info.write(str(planets.tick)+"\n"+str(etag)+"\n"+str(modified)+"\n")
+                info.flush()
+                info.seek(0)
     
             break
         except Exception, e:
@@ -263,8 +317,8 @@ def ticker(alt=False):
 
     t1=time.time()-t_start
     print "Total time taken: %.3f seconds" % (t1,)
-    return planet_tick
+    return planets.tick
 
 print "Dumping from %s" % (base_url,)
 
-planet_tick = ticker()
+ticker()
