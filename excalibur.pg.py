@@ -148,13 +148,24 @@ def get_dumps(last_tick, alt=False, useragent=None):
         req = urllib2.Request(gurl)
         req.add_header('User-Agent', useragent)
         gdump = opener.open(req)
+        if gdump.info().status:
+            excaliburlog("Error loading galaxy listing. Trying again in 2 minutes...")
+            time.sleep(120)
+            return (False, False, False, False)
         req = urllib2.Request(aurl)
         req.add_header('User-Agent', useragent)
         adump = opener.open(req)
+        if adump.info().status:
+            excaliburlog("Error loading alliance listing. Trying again in 2 minutes...")
+            time.sleep(120)
+            return (False, False, False, False)
         if not alt:
             req = urllib2.Request(furl)
             req.add_header('User-Agent', useragent)
             udump = opener.open(req)
+            if udump.info().status:
+                excaliburlog("Error loading user feed. Ignoring. Will catch up next tick.")
+                udump = None
         else:
             udump = None
     except Exception, e:
