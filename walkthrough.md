@@ -141,7 +141,7 @@ Open the crontab
 
 Add a line for excalibur
 
-    1  *    * * *   merlin  /home/merlin/excalibur.py >> /home/merlin/dumplog.txt 2>&1
+    1  *    * * *   merlin  python /home/merlin/excalibur.py >> /home/merlin/dumplog.txt 2>&1
 
 ##Step Nine: Set up nginx
 Open/create a config file for arthur
