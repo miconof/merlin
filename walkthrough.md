@@ -96,7 +96,7 @@ Create a branch for your bot
 
     git checkout -b my_branch
 
-Edit merlin.cfg. This is a good time to alter any access levels in Hooks/. If necessary, you should also change the path in excalibur.sh and/or add other bots to excalibur.pg.py  
+Edit merlin.cfg. This is a good time to alter any access levels in Hooks/. If necessary, you should also any add other bots to excalibur.pg.py  
 For more details, `less README.md`
 
     vi merlin.cfg
@@ -141,7 +141,7 @@ Open the crontab
 
 Add a line for excalibur
 
-    1  *    * * *   merlin  /home/merlin/excalibur.sh >> /home/merlin/dumplog.txt 2>&1
+    1  *    * * *   merlin  /home/merlin/excalibur.py >> /home/merlin/dumplog.txt 2>&1
 
 ##Step Nine: Set up nginx
 Open/create a config file for arthur

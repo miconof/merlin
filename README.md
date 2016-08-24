@@ -131,9 +131,9 @@ Configuring Excalibur
 ----------------------------
 You need to use a task scheduler to run excalibur.py one minute after every tick. If you're using crontab, you might use a command like this, which uses the supplied excalibur.sh
 
-	1 * * * * /path/to/merlin/excalibur.sh >> /path/to/merlin/dumplog.txt 2>&1
+	1 * * * * /path/to/merlin/excalibur.py >> /path/to/merlin/dumplog.txt 2>&1
 
-excalibur.sh will need updating with the path to your bot, and if you want to use MySQL. The relevant excalibur.*.py will need updating if you want to use the same excalibur for more than one bot.
+excalibur.py will need updating if you want to use the same excalibur for more than one bot.
 
 Configuring Apache and running Arthur
 ----------------------------
@@ -281,13 +281,13 @@ This version of merlin allows multiple bots to share a single ticker, saving ban
 Notes:
 
 + Each bot must have its own prefix set in merlin.cfg
-+ The ticker (excalibur.pg.py) called by cron should refer to *all* merlin.cfg paths.
++ The ticker (excalibur.py) called by cron should refer to *all* merlin.cfg paths.
 + Only one ticker should be used. If more than one are called, only the first will work each tick.
 + When migrating data for a new round, do *not* use the "temp" option. This will erase settings for all but the current bot.
 + When migrating data for a new round, migrate the first bot normally. For each other bot, use the "--noschema" option, i.e. `python createdb.py --migrate 36 --noschema`
 
 ### Botfile saving
-To save the PA botfiles every tick, change `savedumps` to `True` in excalibur.pg.py and make sure that the merlin folder itself, or a subdirectory called "dumps", is writable by the account running excalibur.
+To save the PA botfiles every tick, change `savedumps` to `True` in excalibur.py and make sure that the merlin folder itself, or a subdirectory called "dumps", is writable by the account running excalibur.
 
 To share the dumps with others, add a section to your Apache or nginx config, e.g.
 
