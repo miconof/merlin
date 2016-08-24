@@ -23,5 +23,4 @@ imappush.sh
 dumps/*
 yconfig
 scans.priv.*
-excalibur.py
 *.gz
