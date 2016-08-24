@@ -128,7 +128,7 @@ Configuring Excalibur
 ----------------------------
 You need to use a task scheduler to run excalibur.py one minute after every tick. If you're using crontab, you might use a command like this, which uses the supplied excalibur.sh
 
-	1 * * * * /path/to/merlin/excalibur.py >> /path/to/merlin/dumplog.txt 2>&1
+	1 * * * * python /path/to/merlin/excalibur.py >> /path/to/merlin/dumplog.txt 2>&1
 
 excalibur.py will need updating if you want to use the same excalibur for more than one bot.
 
