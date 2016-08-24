@@ -403,6 +403,10 @@ def ticker(alt=False):
             if time.time() > stoptime:
                 # We're not likely getting dumps this tick, so quit
                 excaliburlog("No successful dumps and it's nearly the next tick. Giving up!")
+                if last_tick < PA.getint("numbers", "last_tick"):
+                    for bot in bots:
+                        if bot.getboolean("Misc", "tickermsgs"):
+                            push_message(bot, "adminmsg", text="Failed to tick after %.0f seconds. Giving up until next tick. Last tick: %s." % (time.time() - t_start, last_tick))
                 session.close()
                 sys.exit()
     
@@ -461,7 +465,8 @@ def ticker(alt=False):
                 if planets.tick < last_tick - 5:
                     excaliburlog("Looks like a new round. Giving up.")
                     for bot in bots:
-                        push_message(bot, "adminmsg", text="The current tick appears to be %s, but I've seen tick %s. Has a new round started?" % (planets.tick, last_tick))
+                        if bot.getboolean("Misc", "tickermsgs"):
+                            push_message(bot, "adminmsg", text="The current tick appears to be %s, but I've seen tick %s. Has a new round started?" % (planets.tick, last_tick))
                     return False
                 excaliburlog("Stale ticks found, sleeping")
                 time.sleep(60)
@@ -1327,5 +1332,10 @@ if __name__ == "__main__":
         else:
             find1man(planet_tick-oldtick)
     
+    if oldtick == 0 and planet_tick > 0:
+        for bot in bots:
+            if bot.getboolean("Misc", "tickermsgs"):
+                push_message(bot, "adminmsg", text="Successful tick 1!")
+
     # Add a newline at the end
     excaliburlog("\n")
