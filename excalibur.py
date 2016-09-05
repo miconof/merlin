@@ -393,7 +393,10 @@ def ticker(alt=False):
             # Get the previous tick number!
             last_tick = Updates.current_tick()
             midnight = Updates.midnight_tick() == last_tick
-            hour = bindparam("hour",datetime.datetime.utcnow().hour)
+            if alt:
+                hour = bindparam("hour",(datetime.datetime.utcnow() - datetime.timedelta(seconds=PA.getint("numbers","tick_length")) * (alt-last_tick)).hour)
+            else:
+                hour = bindparam("hour",datetime.datetime.utcnow().hour)
             timestamp = bindparam("timestamp",datetime.datetime.utcnow() - datetime.timedelta(minutes=1))
             # After the normal round, ticks are usually faster; 15 minutes instead of 60
             stoptime = PA.getint("numbers", "tick_length") if last_tick < PA.getint("numbers", "last_tick") else 900
