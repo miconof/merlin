@@ -224,6 +224,15 @@ def parse_userfeed(userfeed):
         content = content[1:-1]
         f = Feed(tick=tick, category=category, text=content)
 
+        if tick == last_tick:
+            dupe = False
+            for rf in recents:
+                if f.category == rf.category and f.text == rf.text:
+                    dupe = True
+                    break
+            if dupe:
+                continue
+
         if category == "Planet Ranking":
             # "TAKIYA GENJI of SUZURAN (3:2:7) is now rank 278 (formerly rank 107)"
             m = re.match(r"(.*) \((\d+):(\d+):(\d+)\)", content)
@@ -296,14 +305,7 @@ def parse_userfeed(userfeed):
             pass
         else:
             excaliburlog("Unknown User Feed Item Type: '%s'" % (category,))
-        if tick == last_tick:
-            for rf in recents:
-                if f.category == rf.category and f.text == rf.text:
-                    break
-            else:
-                session.add(f)
-        else:
-            session.add(f)
+        session.add(f)
     session.commit()
 
 
