@@ -298,15 +298,14 @@ def ticker(alt=False):
                 if planets.tick > alt:
                     print "Something is very, very wrong..."
                     continue
+            info.write(str(planets.tick)+"\n"+str(etag)+"\n"+str(modified)+"\n")
+            info.flush()
+            info.seek(0)
             if planets.tick < alt:
-                print "Still some missing... (waiting 60 seconds)"
-                time.sleep(60)
+                print "Seen:%s Target:%s" %(planets.tick,alt)
+                print "Still some ticks missing... (waiting 10 seconds)"
+                time.sleep(10)
                 ticker(alt)
-            else:
-                info.write(str(planets.tick)+"\n"+str(etag)+"\n"+str(modified)+"\n")
-                info.flush()
-                info.seek(0)
-    
             break
         except Exception, e:
             print "Something random went wrong, sleeping for 15 seconds to hope it improves: %s" % (str(e),)
