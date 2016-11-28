@@ -53,9 +53,15 @@ class connection(object):
         port = Config.getint("Connection", "port")
         print "%s Connecting... (%s %s)" % (time.asctime(), server, port,)
         
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.settimeout(330)
-        self.sock.connect((server, port,))
+        try:
+            self.sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+            self.sock.settimeout(330)
+            self.sock.connect((server, port,))
+        except:
+            print "Error connecting with IPv6. Falling back to IPv4..."
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.sock.settimeout(330)
+            self.sock.connect((server, port,))
         
         passwd = Config.get("Connection", "servpass")
         if passwd:
