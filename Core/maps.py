@@ -1886,102 +1886,104 @@ class DevScan(Base):
         level = self.infrastructure
         if level==0:
             return "20 constructions"
-        if level==1:
+        elif level==1:
             return "50 constructions"
-        if level==2:
+        elif level==2:
             return "100 constructions"
-        if level==3:
+        elif level==3:
             return "150 constructions"
-        if level==4:
+        elif level==4:
             return "200 constructions"
-        if level==5:
+        elif level==5:
             return "300 constructions"
     
     def hulls_str(self):
         level = self.hulls
         if level==1:
             return "FI/CO"
-        if level==2:
+        elif level==2:
             return "FR/DE"
-        if level==3:
+        elif level==3:
             return "CR/BS"
     
     def waves_str(self):
         level = self.waves
         if level==0:
             return "Planet"
-        if level==1:
+        elif level==1:
             return "Landing"
-        if level==2:
+        elif level==2:
             return "Development"
-        if level==3:
+        elif level==3:
             return "Unit"
-        if level==4:
+        elif level==4:
             return "News"
-        if level==5:
+        elif level==5:
             return "Incoming"
-        if level==6:
+        elif level==6:
             return "JGP"
-        if level==7:
+        elif level==7:
             return "Advanced Unit"
     
     def core_str(self):
-        return ("1000","3500","6000","9000","12000")[self.core] + " ept"
+        return ("1000","4000","8000","15000","25000")[self.core] + " ept"
     
     def covop_str(self):
         level = self.covert_op
         if level==0:
-            return "Research hack"
-        if level==1:
-            return "Lower stealth"
-        if level==2:
-            return "Blow up roids"
-        if level==3:
-            return "Blow up ships"
-        if level==4:
-            return "Blow up guards"
-        if level==5:
-            return "Blow up amps/dists"
-        if level==6:
-            return "Resource hacking (OMG!)"
-        if level==7:
-            return "Blow up strucs"
+            return "Exploding Fist"
+        elif level==1:
+            return "Agent Defection"
+        elif level==2:
+            return "Security Guard Defection"
+        elif level==3:
+            return "Hacking : Science Database"
+        elif level==4:
+            return "Warp Drive Manipulation"
+        elif level==5:
+            return "Information Black-out"
+        elif level==6:
+            return "Havoc"
+        elif level==7:
+            return "Hacking : Resource Transfers"
+        elif level==8:
+            return "Government Subversion"
     
     def mining_str(self):
         level = self.mining
         if level==0:
             return "100 roids (scanner!)"
-        if level==1:
+        elif level==1:
             return "200 roids"
-        if level==2:
+        elif level==2:
             return "300 roids"
-        if level==3:
+        elif level==3:
             return "500 roids"
-        if level==4:
+        elif level==4:
             return "750 roids"
-        if level==5:
+        elif level==5:
             return "1k roids"
-        if level==6:
+        elif level==6:
             return "1250 roids"
-        if level==7:
+        elif level==7:
             return "1500 roids"
-        if level==8:
+        elif level==8:
             return "Jan 1. 1900"
-        if level==9:
+        elif level==9:
             return "2500 roids"
-        if level==10:
+        elif level==10:
             return "3000 roids"
-        if level==11:
+        elif level==11:
             return "3500 roids"
-        if level==12:
+        elif level==12:
             return "4500 roids"
-        if level==13:
+        elif level==13:
             return "5500 roids"
-        if level==14:
+        elif level==14:
             return "6500 roids"
-        if level==15:
+        elif level==15:
             return "8000 roids"
-        if level==16:
+        elif level==16:
             return "top10 or dumb"
     
     @property
